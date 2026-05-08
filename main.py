@@ -1,5 +1,7 @@
 import time
 import ctypes
+import ctypes.wintypes
+import psutil
 from datetime import datetime
 
 user32 = ctypes.WinDLL("User32.dll")
@@ -18,6 +20,28 @@ def is_key_pressed(vk: int) -> bool:
     return bool(user32.GetAsyncKeyState(vk) & 0x8000)
 
 
+def get_focused_window_info() -> str:
+    hwnd = user32.GetForegroundWindow()
+    if not hwnd:
+        return "(no focused window)"
+
+    length = user32.GetWindowTextLengthW(hwnd) + 1
+    buf = ctypes.create_unicode_buffer(length)
+    user32.GetWindowTextW(hwnd, buf, length)
+    title = buf.value or "(no title)"
+
+    pid = ctypes.wintypes.DWORD()
+    user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+    pid = pid.value
+
+    try:
+        name = psutil.Process(pid).name()
+    except psutil.NoSuchProcess:
+        name = "(unknown)"
+
+    return f"[{name}] PID={pid} | {title}"
+
+
 print("程序啟動 — F1 停止，CAPS LOCK 暫停", flush=True)
 
 while True:
@@ -29,5 +53,5 @@ while True:
         time.sleep(0.1)
         continue
 
-    print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), flush=True)
+    print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), get_focused_window_info(), flush=True)
     time.sleep(1)
