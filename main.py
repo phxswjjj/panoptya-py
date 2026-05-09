@@ -2,18 +2,20 @@ import time
 from datetime import datetime
 
 from action.collect import CollectAction
+from action.re_fight import ReFightAction
 from bot import Bot, MainBot
 from win32 import get_focused_window_info
 
 
 class GameBot(Bot):
-    """Runs CollectAction when the focused window title contains TARGET."""
+    """Runs CollectAction then ReFightAction when the focused window title contains TARGET."""
 
     TARGET = "Panoptyca"
 
     def __init__(self) -> None:
         super().__init__()
-        self._collect = CollectAction()
+        self._collect  = CollectAction()
+        self._re_fight = ReFightAction()
 
     def tick(self, main_bot: MainBot) -> None:
         _, _, title = get_focused_window_info()
@@ -27,6 +29,8 @@ class GameBot(Bot):
         else:
             remaining = self._collect.cooldown_remaining
             # print(f"{ts} [collect] cooldown {remaining:.0f}s", flush=True)
+
+        self._re_fight.execute()
 
 
 if __name__ == "__main__":
