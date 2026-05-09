@@ -23,13 +23,14 @@ class CollectAction:
         if self._last_executed is not None and (now - self._last_executed) < self.COOLDOWN:
             return False
 
-        keyboard.press_and_release("F4")
-        time.sleep(0.2)
-        keyboard.press_and_release("v")
-        time.sleep(0.2)
-        keyboard.press_and_release("F4")
-        time.sleep(0.2)
-        keyboard.press_and_release("v")
+        for _ in range(4):
+            keyboard.press_and_release("F4")
+            time.sleep(0.2)
+            keyboard.press_and_release("v")
+            time.sleep(0.2)
+        
+        time.sleep(1)
+        keyboard.press_and_release("esc")
 
         self._last_executed = now
         return True
