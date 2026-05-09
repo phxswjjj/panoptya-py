@@ -2,6 +2,7 @@ import time
 from datetime import datetime
 
 from action.collect import CollectAction
+from action.re_boot import ReBootAction
 from action.re_fight import ReFightAction
 from bot import Bot, MainBot
 from win32 import get_focused_window_info
@@ -16,10 +17,12 @@ class GameBot(Bot):
         super().__init__()
         self._collect  = CollectAction()
         self._re_fight = ReFightAction()
+        self._re_boot  = ReBootAction()
 
     def tick(self, main_bot: MainBot) -> None:
         _, _, title = get_focused_window_info()
         if self.TARGET not in title:
+            self._re_boot.execute()
             return
 
         result = self._collect.execute()

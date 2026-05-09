@@ -19,7 +19,7 @@ class CollectAction:
         if self._last_executed is not None and (now - self._last_executed) < self.COOLDOWN:
             return False
 
-        for _ in range(8):
+        for _ in range(4):
             keyboard.press_and_release("F4")
             time.sleep(0.2)
             keyboard.press_and_release("v")

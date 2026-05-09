@@ -62,7 +62,11 @@ class ReFightAction:
         monitor = {"left": left, "top": top, "width": right - left, "height": bottom - top}
 
         with mss.mss() as sct:
-            raw = sct.grab(monitor)
+            try:
+                raw = sct.grab(monitor)
+            except Exception:
+                print("[re-fight] failed to capture screen", flush=True)
+                return None
 
         screenshot = cv2.cvtColor(np.array(raw), cv2.COLOR_BGRA2BGR)
         result = cv2.matchTemplate(screenshot, self._template, cv2.TM_CCOEFF_NORMED)
