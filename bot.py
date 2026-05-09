@@ -6,16 +6,16 @@ from abc import ABC, abstractmethod
 from win32 import CAPS_LOCK, F1_KEY, is_key_on, is_key_pressed
 
 
-class BotAction(ABC):
-    """Base class for all bot actions."""
+class Bot(ABC):
+    """Abstract base class for all worker bots driven by MainBot."""
 
-    def __init__(self, name: str = ""):
+    def __init__(self, name: str = "") -> None:
         self.name = name or self.__class__.__name__
         self.enabled: bool = True
 
     @abstractmethod
-    def run(self, bot: Bot) -> None:
-        """Called once per bot tick when the bot is active."""
+    def tick(self, main_bot: MainBot) -> None:
+        """Called once per MainBot tick when this bot is enabled."""
         ...
 
     def __repr__(self) -> str:
@@ -23,14 +23,14 @@ class BotAction(ABC):
         return f"<{self.name} [{status}]>"
 
 
-class Bot:
+class MainBot:
     """
-    Manages a collection of BotActions and drives the main loop.
+    Orchestrates multiple Bots and drives the main loop.
 
-    Loop behaviour:
-      - Pauses (busy-waits at 0.1 s) while `pause_key` toggle is active.
-      - Stops cleanly when `stop_key` is held down.
-      - Calls each enabled action once per `interval` seconds.
+    Responsibilities:
+      - Run all registered Bots on every tick.
+      - Pause (busy-wait at 0.1 s) while `pause_key` toggle is active.
+      - Stop cleanly when `stop_key` is held down.
     """
 
     def __init__(
@@ -42,57 +42,55 @@ class Bot:
         self.interval  = interval
         self.stop_key  = stop_key
         self.pause_key = pause_key
-        self._actions: list[BotAction] = []
-        self._running  = False
+        self._bots: list[Bot] = []
+        self._running = False
 
-    # ── action management ───────────────────────────────────────────────────
+    # ── bot management ───────────────────────────────────────────────────────
 
-    def add(self, *actions: BotAction) -> Bot:
-        """Add one or more actions. Returns self for chaining."""
-        self._actions.extend(actions)
+    def add(self, *bots: Bot) -> MainBot:
+        """Add one or more bots. Returns self for chaining."""
+        self._bots.extend(bots)
         return self
 
-    def remove(self, action: BotAction) -> Bot:
-        """Remove an action. Returns self for chaining."""
-        self._actions.remove(action)
+    def remove(self, bot: Bot) -> MainBot:
+        self._bots.remove(bot)
         return self
 
-    def clear(self) -> Bot:
-        """Remove all actions."""
-        self._actions.clear()
+    def clear(self) -> MainBot:
+        self._bots.clear()
         return self
 
     @property
-    def actions(self) -> list[BotAction]:
-        return list(self._actions)
+    def bots(self) -> list[Bot]:
+        return list(self._bots)
 
     # ── lifecycle ────────────────────────────────────────────────────────────
 
     def stop(self) -> None:
-        """Request the bot to stop after the current tick."""
+        """Request the loop to stop after the current tick."""
         self._running = False
 
     def run(self) -> None:
         """Start the main loop (blocking)."""
         self._running = True
         print(
-            f"Bot 啟動 ({len(self._actions)} actions) — "
+            f"MainBot 啟動 ({len(self._bots)} bots) — "
             f"F1 停止，CAPS LOCK 暫停",
             flush=True,
         )
         try:
             while self._running:
                 if is_key_pressed(self.stop_key):
-                    print("Bot 已停止", flush=True)
+                    print("MainBot 已停止", flush=True)
                     break
 
                 if is_key_on(self.pause_key):
                     time.sleep(0.1)
                     continue
 
-                for action in list(self._actions):   # copy: safe to mutate during iteration
-                    if action.enabled:
-                        action.run(self)
+                for bot in list(self._bots):   # copy: safe to mutate during tick
+                    if bot.enabled:
+                        bot.tick(self)
 
                 time.sleep(self.interval)
         finally:
