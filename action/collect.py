@@ -90,12 +90,11 @@ class CollectAction:
             keyboard.press_and_release("v")
             time.sleep(0.4)
 
-        time.sleep(0.4)
-        keyboard.press_and_release("esc")
-
-        time.sleep(0.4)
-        self._click_confirm()
-
+        for _ in range(10):
+            time.sleep(0.4)
+            if self._click_confirm():
+                break
+        
         self._last_executed = now
         return True
 
