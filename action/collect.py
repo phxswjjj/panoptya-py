@@ -73,7 +73,7 @@ class CollectAction:
         th, tw = self._confirm_template.shape[:2]
         cx = left + max_loc[0] + tw // 2
         cy = top  + max_loc[1] + th // 2
-        pyautogui.click(cx, cy)
+        pyautogui.click(cx, cy, duration=0.2)
         return True
 
     def execute(self) -> bool:
