@@ -5,7 +5,6 @@ from pathlib import Path
 
 import cv2
 import keyboard
-import mss
 import numpy as np
 import pyautogui
 
@@ -22,6 +21,17 @@ def _get_foreground_rect() -> tuple[int, int, int, int] | None:
     rect = ctypes.wintypes.RECT()
     _user32.GetWindowRect(hwnd, ctypes.byref(rect))
     return (rect.left, rect.top, rect.right, rect.bottom)
+
+
+def _grab_foreground() -> tuple[np.ndarray, tuple[int, int, int, int]] | None:
+    """Screenshot the foreground window using pyautogui. Returns (bgr_image, rect) or None."""
+    win_rect = _get_foreground_rect()
+    if win_rect is None:
+        return None
+    left, top, right, bottom = win_rect
+    pil_img = pyautogui.screenshot(region=(left, top, right - left, bottom - top))
+    bgr = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+    return bgr, win_rect
 
 
 class CollectAction:
@@ -45,17 +55,11 @@ class CollectAction:
         if self._confirm_template is None or self._title_template is None:
             return False
 
-        win_rect = _get_foreground_rect()
-        if win_rect is None:
+        cap = _grab_foreground()
+        if cap is None:
             return False
 
-        left, top, right, bottom = win_rect
-        monitor = {"left": left, "top": top, "width": right - left, "height": bottom - top}
-
-        with mss.mss() as sct:
-            raw = sct.grab(monitor)
-
-        screenshot = cv2.cvtColor(np.array(raw), cv2.COLOR_BGRA2BGR)
+        screenshot, (left, top, *_) = cap
 
         # guard: collect_title.png must be present
         _, title_val, _, _ = cv2.minMaxLoc(
