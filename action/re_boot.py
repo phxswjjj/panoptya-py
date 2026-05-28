@@ -60,10 +60,15 @@ def _wait_and_maximize(timeout: float = 60.0, poll: float = 2.0) -> bool:
              if p.info["name"] == PROCESS_NAME),
             None,
         )
-        if proc and _maximize_pid(proc.pid):
-            ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            print(f"{ts} [reboot] {PROCESS_NAME} launched (PID={proc.pid}) — maximized", flush=True)
-            return True
+
+        if proc:
+            # 等待載入完成，否則可能找不到視窗或最大化失敗
+            time.sleep(1)
+            if _maximize_pid(proc.pid):
+                ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                print(f"{ts} [reboot] {PROCESS_NAME} launched (PID={proc.pid}) — maximized", flush=True)
+                return True
+            
         time.sleep(poll)
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print(f"{ts} [reboot] timed out waiting for {PROCESS_NAME}", flush=True)
@@ -188,6 +193,7 @@ class ReBootAction:
         os.startfile(STEAM_URL)
         if not _wait_and_maximize():
             return
+        
         if not _wait_menu_and_continue():
             return
         if not _wait_commander():
