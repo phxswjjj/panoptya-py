@@ -21,7 +21,7 @@ class GameBot(Bot):
 
     def tick(self, main_bot: MainBot) -> None:
         _, _, title = get_focused_window_info()
-        if self.TARGET not in title:
+        if self.TARGET != title:
             self._re_boot.execute()
             return
 
