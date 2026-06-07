@@ -1,0 +1,95 @@
+{ Game   : Panoptyca.exe
+  Version: 
+  Date   : 2026-06-06
+  Author : phxswjjj
+
+  This script does blah blah blah
+}
+
+// 進入戰鬥前會從屬性面版取得屬性
+define(address, "GameAssembly.dll"+5C1EDF)
+define(bytes,8B 41 30 48 83 C4 20)
+
+[ENABLE]
+
+assert(address,bytes)
+alloc(newmem,$1000, "GameAssembly.dll"+5C1EDF)
+
+label(code)
+label(return)
+
+registersymbol(Player01Base)
+
+newmem:
+  // 如果 Player01Base 已经被找到过了，就直接跳过
+  cmp [Player01Base],0
+  jne code
+
+  // HP>0
+  cmp [rcx+30],0
+  je code
+
+  // 職業? 騎士=02117840, 薩滿=02237B50, 戰士=00271AD0
+  cmp [rcx+180],02117840
+  jne code
+
+  // 職業? 騎士=#34130064, 薩滿=#34699328, 戰士=#74313792
+  cmp [rcx+1c0],#34130064
+  jne code
+
+  // id? 騎士=#5039, 薩滿=#2855, 戰士=#5588, 騎士2=#1245
+  cmp [rcx+1c],#5039
+  jne code
+
+  mov [Player01Base],rcx
+
+code:
+  mov eax,[rcx+30]
+  add rsp,20
+  jmp return
+
+Player01Base:
+  dq 0
+
+address:
+  jmp newmem
+  nop 2
+return:
+
+[DISABLE]
+
+address:
+  db bytes
+  // mov eax,[rcx+30]
+  // add rsp,20
+
+dealloc(newmem)
+unregistersymbol(Player01Base)
+
+{
+// ORIGINAL CODE - INJECTION POINT: GameAssembly.dll+5C1EDF
+
+GameAssembly.dll+5C1EC2: 48 83 EC 20     - sub rsp,20
+GameAssembly.dll+5C1EC6: 80 79 18 00     - cmp byte ptr [rcx+18],00
+GameAssembly.dll+5C1ECA: 48 8B D9        - mov rbx,rcx
+GameAssembly.dll+5C1ECD: 74 10           - je GameAssembly.dll+5C1EDF
+GameAssembly.dll+5C1ECF: 33 D2           - xor edx,edx
+GameAssembly.dll+5C1ED1: E8 8A F8 FF FF  - call GameAssembly.dll+5C1760
+GameAssembly.dll+5C1ED6: 8B 43 30        - mov eax,[rbx+30]
+GameAssembly.dll+5C1ED9: 48 83 C4 20     - add rsp,20
+GameAssembly.dll+5C1EDD: 5B              - pop rbx
+GameAssembly.dll+5C1EDE: C3              - ret 
+// ---------- INJECTING HERE ----------
+GameAssembly.dll+5C1EDF: 8B 41 30        - mov eax,[rcx+30]
+// ---------- DONE INJECTING  ----------
+GameAssembly.dll+5C1EE2: 48 83 C4 20     - add rsp,20
+GameAssembly.dll+5C1EE6: 5B              - pop rbx
+GameAssembly.dll+5C1EE7: C3              - ret 
+GameAssembly.dll+5C1EE8: CC              - int 3 
+GameAssembly.dll+5C1EE9: CC              - int 3 
+GameAssembly.dll+5C1EEA: CC              - int 3 
+GameAssembly.dll+5C1EEB: CC              - int 3 
+GameAssembly.dll+5C1EEC: CC              - int 3 
+GameAssembly.dll+5C1EED: CC              - int 3 
+GameAssembly.dll+5C1EEE: CC              - int 3 
+}
