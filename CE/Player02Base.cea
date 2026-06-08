@@ -35,6 +35,26 @@ newmem:
 
   mov [Player02Base],rcx
 
+  // 修改血量
+  cmp [rcx+30],#7792
+  jne code
+  mov [rcx+30],#999999
+
+  // 修改法抗
+  cmp [rcx+30-300],#1676
+  jne code
+  mov [rcx+30-300],#999999
+
+  // 修改物抗
+  cmp [rcx+30-300+80],#12672
+  jne code
+  mov [rcx+30-300+80],#999999
+
+  // 修改回血
+  cmp [rcx+30-180],#86
+  jne code
+  mov [rcx+30-180],#9999
+
 code:
   mov eax,[rcx+30]
   add rsp,20
