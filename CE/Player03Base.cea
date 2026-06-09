@@ -29,14 +29,14 @@ newmem:
   cmp [rcx+30],0
   je code
 
-  // id? 騎士=#5039, 薩滿=#2870, 戰士=#5588, 騎士2=#1245
-  cmp [rcx+1c],#2870
+  // id? 騎士=#5039, 薩滿=#2870/2885, 戰士=#5588, 騎士2=#1245
+  cmp [rcx+1c],#2885
   jne code
 
   mov [Player03Base],rcx
 
   // 修改血量
-  cmp [rcx+30],#3357
+  cmp [rcx+30],#3375
   jne code
   mov [rcx+30],#999999
 
